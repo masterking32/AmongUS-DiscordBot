@@ -3,7 +3,7 @@ require('dotenv').config()
 
 class Bot {
     client = new Discord.Client();
-    emojis = { '🔈': true, '🔊': false };
+    prefix = `<@!${process.env.BOT_ID}> `;
     
     constructor() {
         this.events();
@@ -14,23 +14,31 @@ class Bot {
         this.client.once('ready', () => {
             console.log('[ONLINE]');
         });
-        
+
         this.client.on('message', message => {
-            if (!message.content.startsWith(process.env.APP_PREFIX) || message.author.bot) return;
+            if (!message.content.startsWith(this.prefix) || message.author.bot) return;
         
             try {
-                const args = message.content.slice(process.env.APP_PREFIX.length).split(/ +/);
+                const args = message.content.slice(this.prefix.length).split(/ +/);
                 const command = args.shift().toLowerCase();
-            
-                if (command === 'mute-start') {
+  
+                if (command === 'start') {
                     this.checkUserPermissions(message, message.member, (message) => {
                         const embed = new Discord.MessageEmbed()
-                                .setTitle('Have a fun session!')
-                                .setDescription('To mute everyone click the 🔈 icon bellow!\nTo unmute everyone click the 🔊 icon bellow!')
-                                .setFooter('Now be quiet!')
-                                .setColor(15158332)
-                                .attachFiles(['./src/assets/shhhhhhh.jpg'])
-                                .setImage('attachment://shhhhhhh.jpg');
+                            .setTitle('Have a fun session!')
+                            .setDescription('How to use:')
+                            .addFields(
+                                { name: 'Click', value: '🔈', inline: true },
+                                { name: 'Result', value: 'Mute everyone', inline: true },
+                                { name: '\u200b', value: '\u200b', inline: true },
+                                { name: 'Click', value: '🔊', inline: true },
+                                { name: 'Result', value: 'Unmute everyone', inline: true },
+                                { name: '\u200b', value: '\u200b', inline: true },
+                            )
+                            .setFooter('Now be quiet!')
+                            .setColor(15158332)
+                            .attachFiles(['./src/assets/shhhhhhh.jpg'])
+                            .setImage('attachment://shhhhhhh.jpg');
                 
                         message.channel
                             .send({ embed: embed })
@@ -39,6 +47,23 @@ class Bot {
                                 await sentEmbed.react('🔊');
                             });
                     });
+                } else if (command === 'info') {
+                    const embed = new Discord.MessageEmbed()
+                        .setTitle('Shhhhhhh! Info!')
+                        .setDescription('How to use:')
+                        .addFields(
+                            { name: 'Command:', value: 'start', inline: true },
+                            { name: 'How to call it', value: '@Shhhhhhh start', inline: true },
+                            { name: 'Requirements', value: 'Admin user, must be connected to a voice channel', inline: false },
+                            { name: 'Output', value: 'The bot will send a message and start listening to actions, those actions being clicking in the mute and unmute buttons.', inline: false },
+                        )
+                        .setFooter('Happy usage!')
+                        .setColor(15158332)
+                        .attachFiles(['./src/assets/shhhhhhh.jpg'])
+                        .setImage('attachment://shhhhhhh.jpg');
+                
+                    message.channel
+                        .send({ embed: embed });
                 }
             } catch (e) {
                 console.error('[Error] -', e.message);
@@ -51,7 +76,9 @@ class Bot {
             try {
                 const { message } = reaction;
                 const member = message.guild.members.cache.get(user.id);
-                const mute = this.emojis[reaction.emoji.name];
+                
+                const emojis = { '🔈': true, '🔊': false };
+                const mute = emojis[reaction.emoji.name];
                 
                 if (mute !== undefined) {
                     this.checkUserPermissions(message, member, (message, user) => {
@@ -83,16 +110,13 @@ class Bot {
     }
 
     removeCurrentReaction (message, user) {
-        const reactions = message.reactions.cache;
-        
-        const muteReaction = reactions.find(reaction => reaction.emoji.name === '🔈');
-        const unMuteReaction = reactions.find(reaction => reaction.emoji.name === '🔊');
-        
-        if (muteReaction)
-            muteReaction.users.remove(user);
-        
-        if (unMuteReaction)
-            unMuteReaction.users.remove(user);
+        message.reactions.cache.forEach(reaction => {
+            const emoji = reaction.emoji.name;
+
+            if (emoji.match(/🔈|🔊/)) {
+                reaction.users.remove(user);
+            }
+        });
     }
 
     handleToggleMute(channel, mute) {
