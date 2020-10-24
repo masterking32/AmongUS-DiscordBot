@@ -3,7 +3,8 @@ require('dotenv').config()
 
 class Bot {
     client = new Discord.Client();
-    prefix = `<@!${process.env.BOT_ID}> `;
+    prefix1 = `${process.env.COMMAND}`;
+    prefix2 = `<@!${process.env.BOT_ID}> `;
     
     constructor() {
         this.events();
@@ -16,11 +17,17 @@ class Bot {
         });
 
         this.client.on('message', message => {
-            if (!message.content.startsWith(this.prefix) || message.author.bot) return;
-        
+            if (message.author.bot) return;
+			
+			
+			const args = this.checkCommand(message);
+			if(!args)
+			{
+				return;
+			}
+			
+			const command = args.shift().toLowerCase();
             try {
-                const args = message.content.slice(this.prefix.length).split(/ +/);
-                const command = args.shift().toLowerCase();
   
                 if (command === 'start') {
                     this.checkUserPermissions(message, message.member, (message) => {
@@ -37,8 +44,8 @@ class Bot {
                             )
                             .setFooter('Now be quiet!')
                             .setColor(15158332)
-                            .attachFiles(['./src/assets/shhhhhhh.jpg'])
-                            .setImage('attachment://shhhhhhh.jpg');
+                            .attachFiles(['./assets/shhhhhhh.png'])
+                            .setImage('attachment://shhhhhhh.png');
                 
                         message.channel
                             .send({ embed: embed })
@@ -47,23 +54,30 @@ class Bot {
                                 await sentEmbed.react('🔊');
                             });
                     });
-                } else if (command === 'info') {
+                } else if (command === 'info' || command === 'help') {
                     const embed = new Discord.MessageEmbed()
-                        .setTitle('Shhhhhhh! Info!')
+                        .setTitle('AmongUS-MasterkinG32! Info!')
                         .setDescription('How to use:')
                         .addFields(
-                            { name: 'Command:', value: 'start', inline: true },
-                            { name: 'How to call it', value: '@Shhhhhhh start', inline: true },
+                            { name: 'How to call it', value: `${process.env.COMMAND}start`, inline: true },
+                            { name: 'Help command', value: `${process.env.COMMAND}help`, inline: true },
+                            { name: 'Send game code', value: `${process.env.COMMAND}code PrivateCode`, inline: true },
                             { name: 'Requirements', value: 'Admin user, must be connected to a voice channel', inline: false },
                             { name: 'Output', value: 'The bot will send a message and start listening to actions, those actions being clicking in the mute and unmute buttons.', inline: false },
                         )
                         .setFooter('Happy usage!')
                         .setColor(15158332)
-                        .attachFiles(['./src/assets/shhhhhhh.jpg'])
-                        .setImage('attachment://shhhhhhh.jpg');
+                        .attachFiles(['./assets/info.png'])
+                        .setImage('attachment://info.png');
                 
                     message.channel
                         .send({ embed: embed });
+                } else if (command === 'code') {
+					const member = message.guild.members.cache.get(message.author.id);
+					this.checkUserPermissions(message, member, (message, member) => {
+                        const channel = message.guild.channels.cache.get(member.voice.channel.id);
+						this.handleSendPrivateCode(message, channel, args);
+                    });
                 }
             } catch (e) {
                 console.error('[Error] -', e.message);
@@ -121,9 +135,49 @@ class Bot {
 
     handleToggleMute(channel, mute) {
         for (const [memberID, member] of channel.members) {
-            member.voice.setMute(mute);
+			try{
+				member.voice.setMute(mute);
+			} catch (e) {
+                console.error('[Error] -', e.message);
+            }
         }
     }
+	
+    handleSendPrivateCode(message, channel, code) {
+		const embed = new Discord.MessageEmbed()
+			.setTitle('AmongUS-MasterkinG32! Invite!')
+			.setDescription('You\'re invited to the game')
+			.addFields(
+				{ name: 'Invited by: ', value: '<@' + message.author.id + '>', inline: false },
+				{ name: 'Private code: ', value: '`' + code + '`', inline: false },
+			)
+			.setFooter('Happy usage!')
+			.setColor(15158332)
+			.attachFiles(['./assets/game.png'])
+			.setImage('attachment://game.png');
+	
+        for (const [memberID, member] of channel.members) {
+			try{
+                const user = message.guild.members.cache.get(memberID);
+				user.send({ embed: embed });
+			} catch (e) {
+                console.error('[Error] -', e.message);
+            }
+        }
+    }
+	
+	checkCommand(message)
+	{
+		if(message.content.startsWith(this.prefix1))
+		{
+			return message.content.slice(this.prefix1.length).split(/ +/);
+		}else if(message.content.startsWith(this.prefix2))
+		{
+			return message.content.slice(this.prefix2.length).split(/ +/);
+		} else {
+			return false;
+		}
+	}
 }
 
 new Bot();
