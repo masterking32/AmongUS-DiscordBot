@@ -18,17 +18,10 @@ class Bot {
 
         this.client.on('message', message => {
             if (message.author.bot) return;
-			
-			
 			const args = this.checkCommand(message);
-			if(!args)
-			{
-				return;
-			}
-			
+			if(!args) return;
 			const command = args.shift().toLowerCase();
             try {
-  
                 if (command === 'start') {
                     this.checkUserPermissions(message, message.member, (message) => {
                         const embed = new Discord.MessageEmbed()
@@ -46,7 +39,6 @@ class Bot {
                             .setColor(15158332)
                             .attachFiles(['./assets/shhhhhhh.png'])
                             .setImage('attachment://shhhhhhh.png');
-                
                         message.channel
                             .send({ embed: embed })
                             .then(async sentEmbed => {
@@ -69,7 +61,6 @@ class Bot {
                         .setColor(15158332)
                         .attachFiles(['./assets/info.png'])
                         .setImage('attachment://info.png');
-                
                     message.channel
                         .send({ embed: embed });
                 } else if (command === 'code') {
@@ -90,14 +81,11 @@ class Bot {
             try {
                 const { message } = reaction;
                 const member = message.guild.members.cache.get(user.id);
-                
                 const emojis = { '🔈': true, '🔊': false };
                 const mute = emojis[reaction.emoji.name];
-                
                 if (mute !== undefined) {
                     this.checkUserPermissions(message, member, (message, user) => {
                         const channel = message.guild.channels.cache.get(user.voice.channel.id);
-                        
                         this.removeCurrentReaction(message, user);
                         this.handleToggleMute(channel, mute);
                     });
@@ -107,11 +95,10 @@ class Bot {
             }
         }); 
     };
-
     login() {
         this.client.login(process.env.APP_TOKEN);
+		console.log('Bot is On');
     }
-
     checkUserPermissions(message, member, callback) {
         if (member.hasPermission('ADMINISTRATOR')) {
             if (member.voice.channel) {
@@ -146,10 +133,10 @@ class Bot {
     handleSendPrivateCode(message, channel, code) {
 		const embed = new Discord.MessageEmbed()
 			.setTitle('AmongUS-MasterkinG32! Invite!')
-			.setDescription('You\'re invited to the game')
+			.setDescription('You\'ve been invited to the game')
 			.addFields(
 				{ name: 'Invited by: ', value: '<@' + message.author.id + '>', inline: false },
-				{ name: 'Private code: ', value: '`' + code + '`', inline: false },
+				{ name: 'Private code: ', value: '||' + code + '||', inline: false },
 			)
 			.setFooter('Happy usage!')
 			.setColor(15158332)
