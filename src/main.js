@@ -95,10 +95,12 @@ class Bot {
             }
         }); 
     };
+    
     login() {
         this.client.login(process.env.APP_TOKEN);
 		console.log('Bot is On');
     }
+    
     checkUserPermissions(message, member, callback) {
         if (member.hasPermission('ADMINISTRATOR')) {
             if (member.voice.channel) {
